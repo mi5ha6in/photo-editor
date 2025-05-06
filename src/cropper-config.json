@@ -1,0 +1,9 @@
+{
+    "aspectRatio": 1,
+    "viewMode": 1,
+    "dragMode": "crop",
+    "autoCropArea": 0.8,
+    "responsive": true,
+    "background": false
+  }
+  

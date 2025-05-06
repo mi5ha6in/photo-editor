@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo editor</title>
+    <link rel="stylesheet" href="src/style.css">
+  </head>
+  <body>
+    <div id="app">
+      <button>Загрузить</button>
+
+      <div class="photo-editor">
+        <div class="photo-editor__header">
+          <h2 class="photo-editor__title">
+            Редактирование изображения
+          </h2>
+        </div>
+        <div class="photo-editor__container">
+
+          <div class="photo-editor__requirements">
+            <div class="photo-editor__requirements-item">
+              Рекомендуемый размер изображения: 1280x800 px
+            </div>
+            <div class="photo-editor__requirements-item photo-editor__requirements-item--error">
+              Загружаемое изображение слишком мало - попробуйте найти другое
+            </div>
+          </div>
+          
+          <div class="photo-editor__image">
+          </div>
+
+          <div class="photo-editor__info">
+            <div class="photo-editor__info-item">
+              Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px, 14 МБ)
+            </div>
+          </div>
+          <div class="photo-editor__controls">
+            <div class="photo-editor__controls-item">
+              <button class="photo-editor__controls-button photo-editor__controls-button--apply">
+                Применить
+              </button>
+            </div>
+            <div class="photo-editor__controls-item">
+              <button class="photo-editor__controls-button photo-editor__controls-button--cancel">
+                Отменить
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+        
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
