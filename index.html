@@ -1,72 +1,63 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Photo editor</title>
-    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/style.scss" />
   </head>
   <body>
     <div id="app">
-
       <div class="photo-editor">
         <div class="photo-editor__upload-container">
-          <input type="file" id="upload" accept="image/png,image/jpeg" class="visually-hidden">
-          <label for="upload" class="photo-editor__upload-button">Загрузить</label>
+          <input
+            type="file"
+            id="upload"
+            accept="image/png,image/jpeg"
+            class="photo-editor__upload-input visually-hidden"
+          />
+          <label for="upload" class="photo-editor__upload-button"
+            >Загрузить изображение</label
+          >
         </div>
 
         <dialog closedby="any" class="photo-editor__editor">
           <div class="photo-editor__header">
-            <h2 class="photo-editor__title">
-              Редактирование изображения
-            </h2>
+            <h2 class="photo-editor__title">Редактирование изображения</h2>
             <button class="photo-editor__close" aria-label="Закрыть">X</button>
           </div>
           <div class="photo-editor__container">
-
             <div class="photo-editor__requirements">
               <div class="photo-editor__requirements-item">
                 Рекомендуемый размер изображения: 1280x800 px
               </div>
-              <div class="photo-editor__requirements-item photo-editor__requirements-item--error">
+              <div
+                class="photo-editor__requirements-item photo-editor__requirements-item--error"
+              >
                 Загружаемое изображение слишком мало - попробуйте найти другое
               </div>
             </div>
-            
-            <div class="photo-editor__image">
-              <cropper-canvas background style="width: 100%; height: 100%;">
-                <cropper-image  alt="Picture" rotatable scalable skewable translatable></cropper-image>
-                <cropper-shade hidden></cropper-shade>
-                <cropper-handle action="select" plain></cropper-handle>
-                <cropper-selection initial-coverage="0.5" movable resizable dynamic x="10" y="5" width="160" height="90">
-                  <cropper-grid role="grid" covered></cropper-grid>
-                  <cropper-crosshair centered></cropper-crosshair>
-                  <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)"></cropper-handle>
-                  <cropper-handle action="n-resize"></cropper-handle>
-                  <cropper-handle action="e-resize"></cropper-handle>
-                  <cropper-handle action="s-resize"></cropper-handle>
-                  <cropper-handle action="w-resize"></cropper-handle>
-                  <cropper-handle action="ne-resize"></cropper-handle>
-                  <cropper-handle action="nw-resize"></cropper-handle>
-                  <cropper-handle action="se-resize"></cropper-handle>
-                  <cropper-handle action="sw-resize"></cropper-handle>
-                </cropper-selection>
-              </cropper-canvas>
-            </div>
+
+            <div class="photo-editor__image"></div>
 
             <div class="photo-editor__info">
               <div class="photo-editor__info-item">
-                Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px, 14 МБ)
+                Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px,
+                14 МБ)
               </div>
             </div>
             <div class="photo-editor__controls">
               <div class="photo-editor__controls-item">
-                <button class="photo-editor__controls-button photo-editor__controls-button--apply">
+                <button
+                  class="photo-editor__controls-button photo-editor__controls-button--apply"
+                >
                   Применить
                 </button>
               </div>
               <div class="photo-editor__controls-item">
-                <button class="photo-editor__controls-button photo-editor__controls-button--cancel">
+                <button
+                  class="photo-editor__controls-button photo-editor__controls-button--cancel"
+                >
                   Отменить
                 </button>
               </div>
@@ -74,8 +65,7 @@
           </div>
         </dialog>
       </div>
-
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
