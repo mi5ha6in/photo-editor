@@ -1,29 +1,23 @@
 import Cropper from "cropperjs";
 
 const UPLOAD_INPUT_NAME = ".photo-editor__upload-input";
-const EDITOR_DIALOG_NAME = ".photo-editor__editor";
+const EDITOR_DIALOG_NAME = ".photo-editor__dialog";
 const CLOSE_BUTTON_NAME = ".photo-editor__close";
+const CROPPER_CONTAINER_NAME = ".photo-editor__image";
 
 const initPhotoEditor = () => {
   const uploadInput = document.querySelector(UPLOAD_INPUT_NAME);
   const editorDialog = document.querySelector(EDITOR_DIALOG_NAME);
-  const closeButton = document.querySelector(CLOSE_BUTTON_NAME);
+  const closeButton = editorDialog.querySelector(CLOSE_BUTTON_NAME);
 
   if (!uploadInput || !editorDialog || !closeButton) {
     console.error(
-      `Не найдены элементы: ${UPLOAD_INPUT_NAME}, ${EDITOR_DIALOG_NAME}, ${CLOSE_BUTTON_NAME}`
+      `Не найдены элементы: ${UPLOAD_INPUT_NAME}, ${EDITOR_DIALOG_NAME}, ${CLOSE_BUTTON_NAME},`
     );
     return;
   }
 
   const image = new Image();
-  const cropper = new Cropper(image, {
-    container: ".photo-editor__image",
-  });
-
-  const cropperCanvas = cropper.getCropperCanvas();
-  const cropperSelection = cropper.getCropperSelection();
-  const cropperImage = cropper.getCropperImage();
 
   uploadInput.addEventListener("change", (event) => {
     const file = event.target.files?.[0];
@@ -33,17 +27,32 @@ const initPhotoEditor = () => {
       reader.onload = (e) => {
         image.src = e.target.result;
         image.onload = () => {
+          document.body.style.overflow = "hidden";
           editorDialog.showModal();
-          cropper.getCropperImage().src = image.src;
-          cropper.getCropperSelection().$render();
+          const cropper = new Cropper(image, {
+            container: CROPPER_CONTAINER_NAME,
+          });
         };
       };
     }
   });
 
   const closeDialog = () => {
+    document.body.style.overflow = "";
     editorDialog.close();
     uploadInput.value = "";
+    rerenderNode(CROPPER_CONTAINER_NAME);
+  };
+
+  const rerenderNode = (selector) => {
+    const oldNode = document.querySelector(selector);
+    if (!oldNode) {
+      console.warn(`Элемент с селектором "${selector}" не найден.`);
+      return;
+    }
+
+    const newNode = oldNode.cloneNode(false);
+    oldNode.replaceWith(newNode);
   };
 
   closeButton.addEventListener("click", closeDialog);
@@ -53,4 +62,4 @@ const initPhotoEditor = () => {
   });
 };
 
-initPhotoEditor();
+document.addEventListener("DOMContentLoaded", initPhotoEditor);

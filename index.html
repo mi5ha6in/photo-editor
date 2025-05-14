@@ -21,45 +21,49 @@
           >
         </div>
 
-        <dialog closedby="any" class="photo-editor__editor">
-          <div class="photo-editor__header">
-            <h2 class="photo-editor__title">Редактирование изображения</h2>
-            <button class="photo-editor__close" aria-label="Закрыть">X</button>
-          </div>
-          <div class="photo-editor__container">
-            <div class="photo-editor__requirements">
-              <div class="photo-editor__requirements-item">
-                Рекомендуемый размер изображения: 1280x800 px
-              </div>
-              <div
-                class="photo-editor__requirements-item photo-editor__requirements-item--error"
-              >
-                Загружаемое изображение слишком мало - попробуйте найти другое
-              </div>
+        <dialog closedby="any" class="photo-editor__dialog">
+          <div class="photo-editor__editor">
+            <div class="photo-editor__header">
+              <h3 class="photo-editor__title">Редактирование изображения</h3>
+              <button class="photo-editor__close" aria-label="Закрыть">
+                X
+              </button>
             </div>
-
-            <div class="photo-editor__image"></div>
-
-            <div class="photo-editor__info">
-              <div class="photo-editor__info-item">
-                Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px,
-                14 МБ)
-              </div>
-            </div>
-            <div class="photo-editor__controls">
-              <div class="photo-editor__controls-item">
-                <button
-                  class="photo-editor__controls-button photo-editor__controls-button--apply"
+            <div class="photo-editor__container">
+              <div class="photo-editor__requirements">
+                <div class="photo-editor__requirements-item">
+                  Рекомендуемый размер изображения: 1280x800 px
+                </div>
+                <div
+                  class="photo-editor__requirements-item photo-editor__requirements-item--error"
                 >
-                  Применить
-                </button>
+                  Загружаемое изображение слишком мало - попробуйте найти другое
+                </div>
               </div>
-              <div class="photo-editor__controls-item">
-                <button
-                  class="photo-editor__controls-button photo-editor__controls-button--cancel"
-                >
-                  Отменить
-                </button>
+
+              <div class="photo-editor__image"></div>
+
+              <div class="photo-editor__info">
+                <div class="photo-editor__info-item">
+                  Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px,
+                  14 МБ)
+                </div>
+              </div>
+              <div class="photo-editor__controls">
+                <div class="photo-editor__controls-item">
+                  <button
+                    class="photo-editor__controls-button photo-editor__controls-button_apply"
+                  >
+                    Применить
+                  </button>
+                </div>
+                <div class="photo-editor__controls-item">
+                  <button
+                    class="photo-editor__controls-button photo-editor__controls-button_cancel"
+                  >
+                    Отменить
+                  </button>
+                </div>
               </div>
             </div>
           </div>

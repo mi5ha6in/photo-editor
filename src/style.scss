@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 .photo-editor {
   $self: &;
 
@@ -42,6 +46,25 @@
     }
   }
 
+  &__dialog {
+    padding: 0;
+    height: 100%;
+    border: none;
+    border-radius: var(--photo-editor-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: var(--photo-editor-color-white);
+    &::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  &__editor {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+    padding: 40px;
+  }
+
   &__header {
     display: grid;
     justify-items: center;
@@ -73,6 +96,7 @@
 
   &__container {
     display: grid;
+    grid-template-rows: auto 1fr auto;
     gap: 20px;
   }
 
@@ -131,26 +155,12 @@
     border-radius: 10px;
     background-color: var(--photo-editor-color-white);
 
-    &--apply {
+    &_apply {
       background-color: lightgreen;
     }
 
-    &--cancel {
+    &_cancel {
       background-color: var(--photo-editor-color-error);
-    }
-  }
-
-  &__editor {
-    padding: 40px;
-    border: none;
-    border-radius: var(--photo-editor-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 90vw;
-    max-height: 90vh;
-    width: 1000px;
-    background: var(--photo-editor-color-white);
-    &::backdrop {
-      background: rgba(0, 0, 0, 0.5);
     }
   }
 
@@ -163,16 +173,16 @@
     width: 100%;
     height: 100%;
   }
-}
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 }
