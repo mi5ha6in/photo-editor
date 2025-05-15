@@ -111,8 +111,7 @@
     padding: 10px;
     border-radius: 10px;
     background-color: var(--photo-editor-color-white);
-    display: grid;
-    place-items: center;
+    text-align: center;
     &--error {
       background-color: var(--photo-editor-color-error);
     }
@@ -172,6 +171,11 @@
   cropper-image {
     width: 100%;
     height: 100%;
+  }
+
+  cropper-selection {
+    outline: rgba(0, 0, 0, 0.65) solid 1px;
+    outline-width: 99999px;
   }
 
   .visually-hidden {

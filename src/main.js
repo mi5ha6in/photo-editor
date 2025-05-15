@@ -4,38 +4,127 @@ const UPLOAD_INPUT_NAME = ".photo-editor__upload-input";
 const EDITOR_DIALOG_NAME = ".photo-editor__dialog";
 const CLOSE_BUTTON_NAME = ".photo-editor__close";
 const CROPPER_CONTAINER_NAME = ".photo-editor__image";
+const RECOMMENDED_IMAGE_RESOLUTION_NAME = "[data-recommended-image-resolution]";
+const ORIGINAL_IMAGE_RESOLUTION_NAME = "[data-original-image-resolution]";
+const ORIGINAL_SIZE_IMAGE_NAME = "[data-original-size-image]";
+const CROPPED_IMAGE_RESOLUTION_NAME = "[data-cropped-image-resolution]";
+const REQUIREMENTS_ITEM_ERROR_NAME = ".photo-editor__requirements-item--error";
+
+const initialData = {
+  recommendedSizeImage: {
+    width: 1280,
+    height: 800,
+  },
+  aspectRatio: 1.5,
+};
 
 const initPhotoEditor = () => {
   const uploadInput = document.querySelector(UPLOAD_INPUT_NAME);
   const editorDialog = document.querySelector(EDITOR_DIALOG_NAME);
   const closeButton = editorDialog.querySelector(CLOSE_BUTTON_NAME);
+  const recommendedImageResolution = editorDialog.querySelector(
+    RECOMMENDED_IMAGE_RESOLUTION_NAME
+  );
+  const originalImageResolution = editorDialog.querySelector(
+    ORIGINAL_IMAGE_RESOLUTION_NAME
+  );
+  const originalSizeImage = editorDialog.querySelector(
+    ORIGINAL_SIZE_IMAGE_NAME
+  );
 
-  if (!uploadInput || !editorDialog || !closeButton) {
+  const requirementsItemError = editorDialog.querySelector(
+    REQUIREMENTS_ITEM_ERROR_NAME
+  );
+  const croppedImageResolution = editorDialog.querySelector(
+    CROPPED_IMAGE_RESOLUTION_NAME
+  );
+
+  if (
+    !uploadInput ||
+    !editorDialog ||
+    !closeButton ||
+    !recommendedImageResolution ||
+    !originalSizeImage ||
+    !originalImageResolution ||
+    !requirementsItemError ||
+    !croppedImageResolution
+  ) {
     console.error(
-      `Не найдены элементы: ${UPLOAD_INPUT_NAME}, ${EDITOR_DIALOG_NAME}, ${CLOSE_BUTTON_NAME},`
+      `Не найден один из элементов: 
+      ${UPLOAD_INPUT_NAME},
+      ${EDITOR_DIALOG_NAME},
+      ${CLOSE_BUTTON_NAME},
+      ${RECOMMENDED_IMAGE_RESOLUTION_NAME},
+      ${ORIGINAL_SIZE_IMAGE_NAME},
+      ${ORIGINAL_IMAGE_RESOLUTION_NAME},
+      ${REQUIREMENTS_ITEM_ERROR_NAME},
+      ${CROPPED_IMAGE_RESOLUTION_NAME}`
     );
     return;
   }
 
   const image = new Image();
 
-  uploadInput.addEventListener("change", (event) => {
+  const handleFileInputChange = async (event) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      await prepareImage(dataUrl, file);
+    } catch (error) {
+      console.error("Ошибка при загрузке изображения:", error);
+    }
+  };
+
+  const readFileAsDataURL = (file) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        image.src = e.target.result;
-        image.onload = () => {
-          document.body.style.overflow = "hidden";
-          editorDialog.showModal();
-          const cropper = new Cropper(image, {
-            container: CROPPER_CONTAINER_NAME,
-          });
-        };
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+    });
+  };
+
+  const prepareImage = (dataUrl, file) => {
+    return new Promise((resolve) => {
+      image.src = dataUrl;
+      image.onload = () => {
+        document.body.style.overflow = "hidden";
+        setInitialData(file);
+        editorDialog.showModal();
+        initCropper(image);
+        resolve();
       };
-    }
-  });
+    });
+  };
+
+  const initCropper = (image) => {
+    const cropper = new Cropper(image, {
+      container: CROPPER_CONTAINER_NAME,
+    });
+
+    const cropperSelection = cropper.getCropperSelection();
+    const cropperImage = cropper.getCropperImage();
+    const cropperCanvas = cropper.getCropperCanvas();
+
+    cropperCanvas.querySelector("cropper-shade").remove();
+    cropperSelection.outlined = true;
+    cropperSelection.aspectRatio = initialData.aspectRatio;
+
+    cropperSelection.addEventListener("change", (event) => {
+      onCropperSelectionChange(event, cropperCanvas, cropperImage);
+    });
+
+    cropperImage.addEventListener("transform", (event) => {
+      onCropperImageTransform(
+        event,
+        cropperCanvas,
+        cropperImage,
+        cropperSelection
+      );
+    });
+  };
 
   const closeDialog = () => {
     document.body.style.overflow = "";
@@ -54,6 +143,85 @@ const initPhotoEditor = () => {
     const newNode = oldNode.cloneNode(false);
     oldNode.replaceWith(newNode);
   };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024 * 1024) {
+      return `${Math.round(bytes / 1024)} КБ`;
+    } else {
+      return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+    }
+  };
+
+  const inSelection = (selection, maxSelection) => {
+    return (
+      selection.x >= maxSelection.x &&
+      selection.y >= maxSelection.y &&
+      selection.x + selection.width <= maxSelection.x + maxSelection.width &&
+      selection.y + selection.height <= maxSelection.y + maxSelection.height
+    );
+  };
+
+  const onCropperImageTransform = (
+    event,
+    cropperCanvas,
+    cropperImage,
+    cropperSelection
+  ) => {
+    const cropperCanvasRect = cropperCanvas.getBoundingClientRect();
+    const cropperImageClone = cropperImage.cloneNode();
+    cropperImageClone.style.transform = `matrix(${event.detail.matrix.join(
+      ", "
+    )})`;
+    cropperImageClone.style.opacity = "0";
+    cropperCanvas.appendChild(cropperImageClone);
+    const cropperImageRect = cropperImageClone.getBoundingClientRect();
+    cropperCanvas.removeChild(cropperImageClone);
+    const selection = cropperSelection;
+    const maxSelection = {
+      x: cropperImageRect.left - cropperCanvasRect.left,
+      y: cropperImageRect.top - cropperCanvasRect.top,
+      width: cropperImageRect.width,
+      height: cropperImageRect.height,
+    };
+
+    if (!inSelection(selection, maxSelection)) {
+      event.preventDefault();
+    }
+  };
+
+  const onCropperSelectionChange = (event, cropperCanvas, cropperImage) => {
+    const cropperCanvasRect = cropperCanvas.getBoundingClientRect();
+    const selection = event.detail;
+
+    const cropperImageRect = cropperImage.getBoundingClientRect();
+    const maxSelection = {
+      x: cropperImageRect.left - cropperCanvasRect.left,
+      y: cropperImageRect.top - cropperCanvasRect.top,
+      width: cropperImageRect.width,
+      height: cropperImageRect.height,
+    };
+    croppedImageResolution.textContent = `${selection.width}x${selection.height}`;
+    if (!inSelection(selection, maxSelection)) {
+      event.preventDefault();
+    }
+  };
+
+  const setInitialData = (file) => {
+    recommendedImageResolution.textContent = `${initialData.recommendedSizeImage.width}x${initialData.recommendedSizeImage.height}`;
+    originalImageResolution.textContent = `${image.naturalWidth}x${image.naturalHeight}`;
+    originalSizeImage.textContent = formatFileSize(file.size);
+
+    if (
+      initialData.recommendedSizeImage.width > image.naturalWidth ||
+      initialData.recommendedSizeImage.height > image.naturalHeight
+    ) {
+      requirementsItemError.hidden = false;
+    } else {
+      requirementsItemError.hidden = true;
+    }
+  };
+
+  uploadInput.addEventListener("change", handleFileInputChange);
 
   closeButton.addEventListener("click", closeDialog);
 

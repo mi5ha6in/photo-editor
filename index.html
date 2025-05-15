@@ -32,7 +32,8 @@
             <div class="photo-editor__container">
               <div class="photo-editor__requirements">
                 <div class="photo-editor__requirements-item">
-                  Рекомендуемый размер изображения: 1280x800 px
+                  Рекомендуемый размер изображения:
+                  <span data-recommended-image-resolution></span>px
                 </div>
                 <div
                   class="photo-editor__requirements-item photo-editor__requirements-item--error"
@@ -45,8 +46,10 @@
 
               <div class="photo-editor__info">
                 <div class="photo-editor__info-item">
-                  Размер: 1280x800 px, 800 КБ (оригинальный размер 6048x4024 px,
-                  14 МБ)
+                  Размер: <span data-cropped-image-resolution></span> px,
+                  (оригинальный размер
+                  <span data-original-image-resolution></span>px,
+                  <span data-original-size-image></span>)
                 </div>
               </div>
               <div class="photo-editor__controls">
