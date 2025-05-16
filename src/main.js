@@ -8,6 +8,7 @@ const RECOMMENDED_IMAGE_RESOLUTION_NAME = "[data-recommended-image-resolution]";
 const ORIGINAL_IMAGE_RESOLUTION_NAME = "[data-original-image-resolution]";
 const ORIGINAL_SIZE_IMAGE_NAME = "[data-original-size-image]";
 const CROPPED_IMAGE_RESOLUTION_NAME = "[data-cropped-image-resolution]";
+const CROPPED_IMAGE_SIZE_NAME = "[data-cropped-image-size]";
 const REQUIREMENTS_ITEM_ERROR_NAME = ".photo-editor__requirements-item--error";
 const APPLY_BUTTON_NAME = ".photo-editor__controls-button_apply";
 const CANCEL_BUTTON_NAME = ".photo-editor__controls-button_cancel";
@@ -39,6 +40,7 @@ const initPhotoEditor = () => {
   const croppedImageResolution = editorDialog.querySelector(
     CROPPED_IMAGE_RESOLUTION_NAME
   );
+  const croppedImageSize = editorDialog.querySelector(CROPPED_IMAGE_SIZE_NAME);
   const applyButton = editorDialog.querySelector(APPLY_BUTTON_NAME);
   const cancelButton = editorDialog.querySelector(CANCEL_BUTTON_NAME);
 
@@ -52,7 +54,8 @@ const initPhotoEditor = () => {
     !requirementsItemError ||
     !croppedImageResolution ||
     !applyButton ||
-    !cancelButton
+    !cancelButton ||
+    !croppedImageSize
   ) {
     console.error(
       `Не найден один из элементов: 
@@ -65,7 +68,8 @@ const initPhotoEditor = () => {
       ${REQUIREMENTS_ITEM_ERROR_NAME},
       ${CROPPED_IMAGE_RESOLUTION_NAME},
       ${APPLY_BUTTON_NAME},
-      ${CANCEL_BUTTON_NAME}`
+      ${CANCEL_BUTTON_NAME},
+      ${CROPPED_IMAGE_SIZE_NAME}`
     );
     return;
   }
@@ -119,11 +123,9 @@ const initPhotoEditor = () => {
     cropperSelection.outlined = true;
     cropperSelection.aspectRatio = initialData.aspectRatio;
 
-    // TODO: Добавить обработку изменения выделения
-    // баги с округлением, временно отключено
-    // cropperSelection.addEventListener("change", (event) => {
-    //   onCropperSelectionChange(event, cropperCanvas, cropperImage);
-    // });
+    cropperSelection.addEventListener("change", (event) => {
+      onCropperSelectionChange(event, cropperCanvas, cropperImage);
+    });
 
     applyButton.onclick = async () => {
       const croppedImage = await cropperSelection.$toCanvas({
@@ -134,20 +136,32 @@ const initPhotoEditor = () => {
       });
 
       const dataURL = croppedImage.toDataURL(file.type, 1);
-      fetch("/api/compress-image", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          image: dataURL,
-          imageName: file.name,
-          imageType: file.type,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => console.log("Успех:", data))
-        .catch((error) => console.error("Ошибка:", error));
+
+      const uploadImage = async (file) => {
+        try {
+          const response = await fetch("public/result.json", {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({
+              image: dataURL,
+              imageName: file.name,
+              imageType: file.type,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Ошибка сервера");
+          }
+
+          return await response.json();
+        } catch (error) {
+          throw new Error("Ошибка при загрузке изображения");
+        }
+      };
+      const result = await uploadImage(file);
+      console.log(result);
     };
   };
 
