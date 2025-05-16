@@ -1,5 +1,6 @@
 import Cropper from "cropperjs";
 
+const PHOTO_EDITOR_NAME = ".photo-editor";
 const UPLOAD_INPUT_NAME = ".photo-editor__upload-input";
 const EDITOR_DIALOG_NAME = ".photo-editor__dialog";
 const CLOSE_BUTTON_NAME = ".photo-editor__close";
@@ -9,83 +10,91 @@ const ORIGINAL_IMAGE_RESOLUTION_NAME = "[data-original-image-resolution]";
 const ORIGINAL_SIZE_IMAGE_NAME = "[data-original-size-image]";
 const CROPPED_IMAGE_RESOLUTION_NAME = "[data-cropped-image-resolution]";
 const CROPPED_IMAGE_SIZE_NAME = "[data-cropped-image-size]";
-const REQUIREMENTS_ITEM_ERROR_NAME = ".photo-editor__requirements-item--error";
+const REQUIREMENTS_ITEM_ERROR_NAME = ".photo-editor__requirements-item_error";
 const APPLY_BUTTON_NAME = ".photo-editor__controls-button_apply";
 const CANCEL_BUTTON_NAME = ".photo-editor__controls-button_cancel";
+const RESULT_TEMPLATE_NAME = "#result-template";
+const EDITOR_TEMPLATE_NAME = "#editor-template";
+const EDITOR_DIALOG_CONTENT_NAME = ".photo-editor__dialog-content";
 
-const initialData = {
-  recommendedSizeImage: {
-    width: 1280,
-    height: 800,
-  },
-  aspectRatio: 1.5,
+const defaultConfig = {
+  recommendedImageWidth: 1600,
+  recommendedImageHeight: 900,
+  aspectRatio: 1.7777777777777777,
+  urlFileUpload: "public/result.json",
+};
+
+const currentImageData = {
+  originalWidth: 0,
+  originalHeight: 0,
+  originalSize: 0,
+  croppedWidth: 0,
+  croppedHeight: 0,
 };
 
 const initPhotoEditor = () => {
-  const uploadInput = document.querySelector(UPLOAD_INPUT_NAME);
-  const editorDialog = document.querySelector(EDITOR_DIALOG_NAME);
+  const photoEditor = document.querySelector(PHOTO_EDITOR_NAME);
+  const uploadInput = photoEditor.querySelector(UPLOAD_INPUT_NAME);
+  const editorDialog = photoEditor.querySelector(EDITOR_DIALOG_NAME);
   const closeButton = editorDialog.querySelector(CLOSE_BUTTON_NAME);
-  const recommendedImageResolution = editorDialog.querySelector(
-    RECOMMENDED_IMAGE_RESOLUTION_NAME
+  const editorTemplate = document.querySelector(EDITOR_TEMPLATE_NAME);
+  const editorDialogContent = editorDialog.querySelector(
+    EDITOR_DIALOG_CONTENT_NAME
   );
-  const originalImageResolution = editorDialog.querySelector(
-    ORIGINAL_IMAGE_RESOLUTION_NAME
-  );
-  const originalSizeImage = editorDialog.querySelector(
-    ORIGINAL_SIZE_IMAGE_NAME
-  );
-  const requirementsItemError = editorDialog.querySelector(
-    REQUIREMENTS_ITEM_ERROR_NAME
-  );
-  const croppedImageResolution = editorDialog.querySelector(
-    CROPPED_IMAGE_RESOLUTION_NAME
-  );
-  const croppedImageSize = editorDialog.querySelector(CROPPED_IMAGE_SIZE_NAME);
-  const applyButton = editorDialog.querySelector(APPLY_BUTTON_NAME);
-  const cancelButton = editorDialog.querySelector(CANCEL_BUTTON_NAME);
+  const resultTemplate = document.querySelector(RESULT_TEMPLATE_NAME);
 
   if (
+    !photoEditor ||
     !uploadInput ||
     !editorDialog ||
     !closeButton ||
-    !recommendedImageResolution ||
-    !originalSizeImage ||
-    !originalImageResolution ||
-    !requirementsItemError ||
-    !croppedImageResolution ||
-    !applyButton ||
-    !cancelButton ||
-    !croppedImageSize
+    !editorTemplate ||
+    !editorDialogContent ||
+    !resultTemplate
   ) {
     console.error(
-      `Не найден один из элементов: 
+      `Не найден один из элементов:
+      ${PHOTO_EDITOR_NAME},
       ${UPLOAD_INPUT_NAME},
       ${EDITOR_DIALOG_NAME},
       ${CLOSE_BUTTON_NAME},
-      ${RECOMMENDED_IMAGE_RESOLUTION_NAME},
-      ${ORIGINAL_SIZE_IMAGE_NAME},
-      ${ORIGINAL_IMAGE_RESOLUTION_NAME},
-      ${REQUIREMENTS_ITEM_ERROR_NAME},
-      ${CROPPED_IMAGE_RESOLUTION_NAME},
-      ${APPLY_BUTTON_NAME},
-      ${CANCEL_BUTTON_NAME},
-      ${CROPPED_IMAGE_SIZE_NAME}`
+      ${EDITOR_TEMPLATE_NAME},
+      ${EDITOR_DIALOG_CONTENT_NAME},
+      ${RESULT_TEMPLATE_NAME},`
     );
     return;
   }
 
-  const image = new Image();
+  const getConfig = () => {
+    try {
+      const customConfig = photoEditor.dataset.config
+        ? JSON.parse(photoEditor.dataset.config)
+        : {};
+
+      return { ...defaultConfig, ...customConfig };
+    } catch (error) {
+      console.error(
+        "Ошибка парсинга конфига, используется конфиг по умолчанию",
+        error
+      );
+      return defaultConfig;
+    }
+  };
+
+  const initialData = getConfig();
 
   const handleFileInputChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    showLoader();
     try {
       const dataUrl = await readFileAsDataURL(file);
       await prepareImage(dataUrl, file);
     } catch (error) {
       console.error("Ошибка при загрузке изображения:", error);
     }
+    hideLoader();
   };
 
   const readFileAsDataURL = (file) => {
@@ -99,10 +108,10 @@ const initPhotoEditor = () => {
 
   const prepareImage = (dataUrl, file) => {
     return new Promise((resolve) => {
+      const image = new Image();
       image.src = dataUrl;
       image.onload = () => {
         document.body.style.overflow = "hidden";
-        setInitialData(file);
         editorDialog.showModal();
         initCropper(image, file);
         resolve();
@@ -111,6 +120,15 @@ const initPhotoEditor = () => {
   };
 
   const initCropper = (image, file) => {
+    const editor = createEditor(image, file);
+    const applyButton = editor.querySelector(APPLY_BUTTON_NAME);
+    const cancelButton = editor.querySelector(CANCEL_BUTTON_NAME);
+    const croppedImageResolution = editor.querySelector(
+      CROPPED_IMAGE_RESOLUTION_NAME
+    );
+
+    editorDialogContent.replaceChildren(editor);
+
     const cropper = new Cropper(image, {
       container: CROPPER_CONTAINER_NAME,
     });
@@ -124,63 +142,132 @@ const initPhotoEditor = () => {
     cropperSelection.aspectRatio = initialData.aspectRatio;
 
     cropperSelection.addEventListener("change", (event) => {
-      onCropperSelectionChange(event, cropperCanvas, cropperImage);
+      onCropperSelectionChange(
+        event,
+        cropperCanvas,
+        cropperImage,
+        croppedImageResolution
+      );
     });
 
     applyButton.onclick = async () => {
-      const croppedImage = await cropperSelection.$toCanvas({
-        beforeDraw: (context) => {
-          context.imageSmoothingEnabled = true;
-          context.imageSmoothingQuality = "high";
-        },
-      });
+      showLoader();
+      try {
+        const croppedImage = await cropperSelection.$toCanvas({
+          beforeDraw: (context) => {
+            context.imageSmoothingEnabled = true;
+            context.imageSmoothingQuality = "high";
+          },
+        });
 
-      const dataURL = croppedImage.toDataURL(file.type, 1);
+        const blob = await new Promise((resolve) => {
+          croppedImage.toBlob((blob) => resolve(blob), file.type, 1);
+        });
 
-      const uploadImage = async (file) => {
-        try {
-          const response = await fetch("public/result.json", {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify({
-              image: dataURL,
-              imageName: file.name,
-              imageType: file.type,
-            }),
-          });
+        const formData = new FormData();
+        formData.append("image", blob, file.name);
+        formData.append("imageName", file.name);
+        formData.append("imageType", file.type);
+        formData.append("originalWidth", currentImageData.originalWidth);
+        formData.append("originalHeight", currentImageData.originalHeight);
+        formData.append("croppedWidth", currentImageData.croppedWidth);
+        formData.append("croppedHeight", currentImageData.croppedHeight);
 
-          if (!response.ok) {
-            throw new Error("Ошибка сервера");
+        const uploadImage = async () => {
+          try {
+            const response = await fetch(initialData.urlFileUpload, {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error("Ошибка сервера");
+            }
+
+            return await response.json();
+          } catch (error) {
+            throw new Error("Ошибка при загрузке изображения");
           }
+        };
 
-          return await response.json();
-        } catch (error) {
-          throw new Error("Ошибка при загрузке изображения");
-        }
-      };
-      const result = await uploadImage(file);
-      console.log(result);
+        await uploadImage();
+
+        const resultData = await uploadImage(file);
+        const resultItem = createResultItem(resultData);
+        editorDialogContent.replaceChildren(resultItem);
+      } catch (e) {
+        alert("Ошибка при обработке изображения");
+      }
+      hideLoader();
     };
+
+    cancelButton.onclick = () => {
+      closeDialog();
+    };
+  };
+
+  const createEditor = (image, file) => {
+    const editor = editorTemplate.content.cloneNode(true);
+
+    const recommendedImageResolution = editor.querySelector(
+      RECOMMENDED_IMAGE_RESOLUTION_NAME
+    );
+    const originalImageResolution = editor.querySelector(
+      ORIGINAL_IMAGE_RESOLUTION_NAME
+    );
+    const originalSizeImage = editor.querySelector(ORIGINAL_SIZE_IMAGE_NAME);
+    const requirementsItemError = editor.querySelector(
+      REQUIREMENTS_ITEM_ERROR_NAME
+    );
+
+    currentImageData.originalWidth = image.naturalWidth;
+    currentImageData.originalHeight = image.naturalHeight;
+    currentImageData.originalSize = formatFileSize(file.size);
+
+    recommendedImageResolution.textContent = `${initialData.recommendedImageWidth}x${initialData.recommendedImageHeight}`;
+    originalImageResolution.textContent = `${image.naturalWidth}x${image.naturalHeight}`;
+    originalSizeImage.textContent = formatFileSize(file.size);
+
+    if (
+      initialData.recommendedImageWidth > image.naturalWidth ||
+      initialData.recommendedImageHeight > image.naturalHeight
+    ) {
+      requirementsItemError.textContent =
+        "Загружаемое изображение слишком мало - попробуйте найти другое";
+      requirementsItemError.classList.remove("hidden");
+    } else {
+      requirementsItemError.textContent = "";
+      requirementsItemError.classList.add("hidden");
+    }
+
+    return editor;
+  };
+
+  const createResultItem = (result) => {
+    const resultItem = resultTemplate.content.cloneNode(true);
+    resultItem.querySelector("img").src = result.image;
+
+    resultItem.querySelector(CROPPED_IMAGE_SIZE_NAME).textContent =
+      formatFileSize(result.size);
+
+    resultItem.querySelector(
+      CROPPED_IMAGE_RESOLUTION_NAME
+    ).textContent = `${result.width}x${result.height}`;
+
+    resultItem.querySelector(ORIGINAL_SIZE_IMAGE_NAME).textContent =
+      currentImageData.originalSize;
+
+    resultItem.querySelector(
+      ORIGINAL_IMAGE_RESOLUTION_NAME
+    ).textContent = `${currentImageData.originalWidth}x${currentImageData.originalHeight}`;
+
+    return resultItem;
   };
 
   const closeDialog = () => {
     document.body.style.overflow = "";
     editorDialog.close();
     uploadInput.value = "";
-    rerenderNode(CROPPER_CONTAINER_NAME);
-  };
-
-  const rerenderNode = (selector) => {
-    const oldNode = document.querySelector(selector);
-    if (!oldNode) {
-      console.warn(`Элемент с селектором "${selector}" не найден.`);
-      return;
-    }
-
-    const newNode = oldNode.cloneNode(false);
-    oldNode.replaceWith(newNode);
   };
 
   const formatFileSize = (bytes) => {
@@ -200,47 +287,52 @@ const initPhotoEditor = () => {
     );
   };
 
-  const onCropperSelectionChange = (event, cropperCanvas, cropperImage) => {
+  const onCropperSelectionChange = (
+    event,
+    cropperCanvas,
+    cropperImage,
+    croppedImageResolution
+  ) => {
     const cropperCanvasRect = cropperCanvas.getBoundingClientRect();
     const selection = event.detail;
 
     const cropperImageRect = cropperImage.getBoundingClientRect();
+
     const maxSelection = {
       x: cropperImageRect.left - cropperCanvasRect.left,
       y: cropperImageRect.top - cropperCanvasRect.top,
       width: cropperImageRect.width,
       height: cropperImageRect.height,
     };
+
     croppedImageResolution.textContent = `${selection.width}x${selection.height}`;
     if (!inSelection(selection, maxSelection)) {
       event.preventDefault();
     }
+
+    currentImageData.croppedWidth = selection.width;
+    currentImageData.croppedHeight = selection.height;
   };
 
-  const setInitialData = (file) => {
-    recommendedImageResolution.textContent = `${initialData.recommendedSizeImage.width}x${initialData.recommendedSizeImage.height}`;
-    originalImageResolution.textContent = `${image.naturalWidth}x${image.naturalHeight}`;
-    originalSizeImage.textContent = formatFileSize(file.size);
-
-    if (
-      initialData.recommendedSizeImage.width > image.naturalWidth ||
-      initialData.recommendedSizeImage.height > image.naturalHeight
-    ) {
-      requirementsItemError.hidden = false;
-    } else {
-      requirementsItemError.hidden = true;
+  const showLoader = () => {
+    let loader = document.querySelector(".photo-editor__loader");
+    if (!loader) {
+      const loaderTemplate = document.querySelector("#loader-template");
+      loader = loaderTemplate.content.firstElementChild.cloneNode(true);
+      document.body.appendChild(loader);
     }
   };
+
+  function hideLoader() {
+    const loader = document.querySelector(".photo-editor__loader");
+    if (loader) loader.remove();
+  }
 
   uploadInput.addEventListener("change", handleFileInputChange);
 
   closeButton.addEventListener("click", closeDialog);
 
   editorDialog.addEventListener("close", () => {
-    closeDialog();
-  });
-
-  cancelButton.addEventListener("click", () => {
     closeDialog();
   });
 };

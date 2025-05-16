@@ -8,72 +8,110 @@
   </head>
   <body>
     <div id="app">
-      <div class="photo-editor">
+      <div
+        class="photo-editor"
+        data-config='{
+          "recommendedImageWidth": 1600,
+          "recommendedImageHeight": 900,
+          "aspectRatio": 1.7777777777777777,
+          "urlFileUpload": "public/result.json"
+      }'
+      >
         <div class="photo-editor__upload-container">
-          <input
-            type="file"
-            id="upload"
-            accept="image/png,image/jpeg"
-            class="photo-editor__upload-input visually-hidden"
-          />
-          <label for="upload" class="photo-editor__upload-button"
-            >Загрузить изображение</label
-          >
+          <form method="POST">
+            <input
+              type="file"
+              id="upload"
+              accept="image/png,image/jpeg"
+              class="photo-editor__upload-input visually-hidden"
+            />
+            <label for="upload" class="photo-editor__upload-button"
+              >Загрузить изображение</label
+            >
+          </form>
         </div>
 
         <dialog closedby="any" class="photo-editor__dialog">
-          <div class="photo-editor__editor">
-            <div class="photo-editor__header">
-              <h3 class="photo-editor__title">Редактирование изображения</h3>
-              <button class="photo-editor__close" aria-label="Закрыть">
-                X
-              </button>
-            </div>
-            <div class="photo-editor__container">
-              <div class="photo-editor__requirements">
-                <div class="photo-editor__requirements-item">
-                  Рекомендуемый размер изображения:
-                  <span data-recommended-image-resolution></span>px
-                </div>
-                <div
-                  class="photo-editor__requirements-item photo-editor__requirements-item--error"
-                >
-                  Загружаемое изображение слишком мало - попробуйте найти другое
-                </div>
-              </div>
-
-              <div class="photo-editor__image"></div>
-
-              <div class="photo-editor__info">
-                <div class="photo-editor__info-item">
-                  Размер: <span data-cropped-image-resolution></span>px,
-                  <span data-cropped-image-size></span>
-                  (оригинальный размер
-                  <span data-original-image-resolution></span>px,
-                  <span data-original-size-image></span>)
-                </div>
-              </div>
-              <div class="photo-editor__controls">
-                <div class="photo-editor__controls-item">
-                  <button
-                    class="photo-editor__controls-button photo-editor__controls-button_apply"
-                  >
-                    Применить
-                  </button>
-                </div>
-                <div class="photo-editor__controls-item">
-                  <button
-                    class="photo-editor__controls-button photo-editor__controls-button_cancel"
-                  >
-                    Отменить
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <button class="photo-editor__close" aria-label="Закрыть">X</button>
+          <div class="photo-editor__dialog-content"></div>
         </dialog>
       </div>
     </div>
+
+    <template id="editor-template">
+      <div class="photo-editor__editor">
+        <div class="photo-editor__header">
+          <h3 class="photo-editor__title">Редактирование изображения</h3>
+        </div>
+        <div class="photo-editor__container">
+          <div class="photo-editor__requirements">
+            <div class="photo-editor__requirements-item">
+              Рекомендуемый размер изображения:
+              <span data-recommended-image-resolution></span>px
+            </div>
+            <div
+              class="photo-editor__requirements-item photo-editor__requirements-item_error hidden"
+            ></div>
+          </div>
+
+          <div class="photo-editor__image"></div>
+
+          <div class="photo-editor__info">
+            <div class="photo-editor__info-item">
+              Размер: <span data-cropped-image-resolution></span>px,
+              <span data-cropped-image-size></span>
+              (оригинальный размер
+              <span data-original-image-resolution></span>px,
+              <span data-original-size-image></span>)
+            </div>
+          </div>
+          <div class="photo-editor__controls">
+            <div class="photo-editor__controls-item">
+              <button
+                class="photo-editor__controls-button photo-editor__controls-button_apply"
+              >
+                Применить
+              </button>
+            </div>
+            <div class="photo-editor__controls-item">
+              <button
+                class="photo-editor__controls-button photo-editor__controls-button_cancel"
+              >
+                Отменить
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="result-template">
+      <div class="photo-editor__result">
+        <h3 class="photo-editor__result-title">Результат</h3>
+        <div class="photo-editor__result-item">
+          <div class="photo-editor__result-item-info">
+            <div class="photo-editor__info-item">
+              Размер: <span data-cropped-image-resolution></span>px,
+              <span data-cropped-image-size></span>
+              (оригинальный размер
+              <span data-original-image-resolution></span>px,
+              <span data-original-size-image></span>)
+            </div>
+          </div>
+          <div class="photo-editor__result-item-image">
+            <img src="" />
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="loader-template">
+      <div class="photo-editor__loader">
+        <div class="photo-editor__loader-spinner"></div>
+        <div class="photo-editor__loader-text">Пожалуйста, подождите...</div>
+      </div>
+    </template>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
